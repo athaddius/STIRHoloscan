@@ -26,6 +26,39 @@ from holoscan.operators import (
     VideoStreamReplayerOp,
 )
 from holoscan.resources import UnboundedAllocator
+import cupy as cp
+import numpy as np
+
+class DataGenOp(Operator):
+    """Print the received signal to the terminal."""
+
+    def setup(self, spec: OperatorSpec):
+        spec.output("output_tensor_img")
+
+    def compute(self, op_input, op_output, context):
+        out_msg = dict()
+        out_msg['source_video'] = cp.random.random((256, 256, 1), np.float32)
+        print("Generated")
+        signal = op_output.emit(out_msg, "output_tensor_img")
+
+class IdentityOp(Operator):
+    """Print the received signal to the terminal."""
+
+    def setup(self, spec: OperatorSpec):
+        spec.input("input_tensor")
+        spec.output("output_tensor")
+
+    def compute(self, op_input, op_output, context):
+        #op_input['input_tensor']
+        #cupy_signal = signal['out_tensor']
+        in_message = op_input.receive("input_tensor")
+        out_msg = dict()
+        for k, v in in_message.items():
+            breakpoint()
+            cp_array = cp.asarray(v)
+            out_msg[k] = cp_array
+        print("Received")
+        signal = op_output.emit(out_msg, "output_tensor")
 
 class PrintSignalOp(Operator):
     """Print the received signal to the terminal."""
@@ -35,6 +68,8 @@ class PrintSignalOp(Operator):
 
     def compute(self, op_input, op_output, context):
         signal = op_input.receive("signal")
+        cupy_signal = signal['out_tensor']
+        #cp_array = signal.asarray()
         print("Received")
 
 class BYOMApp(Application):
@@ -90,11 +125,19 @@ class BYOMApp(Application):
 
 
         sinkop = PrintSignalOp(self, name="Sink")
+        genop = DataGenOp(self, name="Generator")
         # Define the workflow
-        self.add_flow(source, preprocessor, {("output", "source_video")})
-        self.add_flow(preprocessor, inference, {("tensor", "receivers")})
+        self.add_flow(genop, inference, {("", "receivers")})
         self.add_flow(inference, postprocessor, {("transmitter", "in_tensor")})
         self.add_flow(postprocessor, sinkop, {("out_tensor", "signal")})
+#        idop = IdentityOp(self, name="Passthrough")
+#        # Define the workflow
+#        self.add_flow(source, preprocessor, {("output", "source_video")})
+#        #self.add_flow(datagenerator, inference, {("tensor", "receivers")})
+#        self.add_flow(preprocessor, idop)
+#        self.add_flow(idop, inference, {("", "receivers")})
+#        self.add_flow(inference, postprocessor, {("transmitter", "in_tensor")})
+#        self.add_flow(postprocessor, sinkop, {("out_tensor", "signal")})
 
 
 def main(config_file, data):
