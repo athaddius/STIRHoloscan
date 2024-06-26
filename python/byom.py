@@ -13,7 +13,7 @@
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-"""  # noqa: E501
+"""
 
 import os
 from argparse import ArgumentParser
@@ -42,13 +42,13 @@ class DataGenOp(Operator):
     def compute(self, op_input, op_output, context):
         self.count+=1
         out_dict = dict()
-        out_dict['pointlist'] = cp.random.random((1, 16, 3), np.float32) * 32.
-        out_dict['image1'] = cp.random.random((1, 3, 512, 640), np.float32)
-        out_dict['image2'] = cp.random.random((1, 3, 512, 640), np.float32)
-        for k,v in out_dict.items():
-            out_dict[k] = v.asnumpy()
+        out_dict["pointlist"] = cp.random.random((1, 16, 2), np.float32) * 32.0
+        out_dict["image1"] = cp.random.random((1, 3, 512, 640), np.float32)
+        out_dict["image2"] = cp.random.random((1, 3, 512, 640), np.float32)
+        # for k, v in out_dict.items():
+        #     # out_dict[k] = v.asnumpy()
         print(f"Generated {self.count}")
-        op_output.emit(out_msg, "out_dict")
+        op_output.emit(out_dict, "out_dict")
 
 class IdentityOp(Operator):
     """Print the received signal to the terminal."""
@@ -58,12 +58,12 @@ class IdentityOp(Operator):
         spec.output("output_tensor")
 
     def compute(self, op_input, op_output, context):
-        #op_input['input_tensor']
-        #cupy_signal = signal['out_tensor']
+        # op_input['input_tensor']
+        # cupy_signal = signal['out_tensor']
         in_message = op_input.receive("input_tensor")
         out_msg = dict()
         for k, v in in_message.items():
-            breakpoint()
+            # breakpoint()
             cp_array = cp.asarray(v)
             out_msg[k] = cp_array
         print("Received")
@@ -94,17 +94,13 @@ class BYOMApp(Application):
         # set name
         self.name = "BYOM App"
 
-
-
         self.model_path_map = {
-            "raft_model": os.path.join('./model/raft_pointtrackSTIR.onnx'),
+            "raft_model": os.path.join("./model/modified_raftmodel.onnx"),
+            # "raft_model": os.path.join('./model/raft_pointtrackSTIR.onnx'),
         }
-
 
     def compose(self):
         host_allocator = UnboundedAllocator(self, name="host_allocator")
-
-
 
         inference = InferenceOp(
             self,
@@ -117,17 +113,15 @@ class BYOMApp(Application):
             model_path_map=self.model_path_map,
             **self.kwargs("inference"),
         )
-        breakpoint()
-
-
+        # breakpoint()
 
         sinkop = PrintSignalOp(self, name="Sink")
         genop = DataGenOp(self, name="Generator")
         # Define the workflow
         self.add_flow(genop, inference, {("", "receivers")})
         self.add_flow(inference, sinkop, {("transmitter", "signal")})
-        breakpoint()
-        #self.add_flow(postprocessor, sinkop, {("out_tensor", "signal")})
+        # breakpoint()
+        # self.add_flow(postprocessor, sinkop, {("out_tensor", "signal")})
 #        idop = IdentityOp(self, name="Passthrough")
 #        # Define the workflow
 #        self.add_flow(source, preprocessor, {("output", "source_video")})
