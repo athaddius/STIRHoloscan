@@ -14,28 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ---
-replayer:  # VideoStreamReplayer
-  basename: "racerx"
-  frame_rate: 0 # as specified in timestamps
-  repeat: true # default: false
-  realtime: true # default: true
-  count: 0 # default: 0 (no frame count restriction)
-
-preprocessor:  # FormatConverter
-  out_tensor_name: source_video
-  out_dtype: "float32"
-  resize_width: 512
-  resize_height: 512
 
 inference:  # Inference
-  backend: "trt"
+  backend: "onnxrt"
   pre_processor_map: 
-    "byom_model": ["source_video"]
+    "raft_model": ["pointlist", "image1", "image2"]
   inference_map: 
-    "byom_model": ["output"]
-
-postprocessor:  # SegmentationPostprocessor
-  in_tensor_name: output
-  # network_output_type: None
-  data_format: nchw
+    "raft_model": ["end_points"]
 

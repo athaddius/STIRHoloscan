@@ -30,16 +30,25 @@ import cupy as cp
 import numpy as np
 
 class DataGenOp(Operator):
-    """Print the received signal to the terminal."""
+    """Generate dummy data for point tracking"""
+    def __init__(self, fragment, *args, **kwargs):
+        self.count = 1
+
+        super().__init__(fragment, *args, **kwargs)
 
     def setup(self, spec: OperatorSpec):
-        spec.output("output_tensor_img")
+        spec.output("out_dict")
 
     def compute(self, op_input, op_output, context):
-        out_msg = dict()
-        out_msg['source_video'] = cp.random.random((256, 256, 1), np.float32)
-        print("Generated")
-        signal = op_output.emit(out_msg, "output_tensor_img")
+        self.count+=1
+        out_dict = dict()
+        out_dict['pointlist'] = cp.random.random((1, 16, 3), np.float32) * 32.
+        out_dict['image1'] = cp.random.random((1, 3, 512, 640), np.float32)
+        out_dict['image2'] = cp.random.random((1, 3, 512, 640), np.float32)
+        for k,v in out_dict.items():
+            out_dict[k] = v.asnumpy()
+        print(f"Generated {self.count}")
+        op_output.emit(out_msg, "out_dict")
 
 class IdentityOp(Operator):
     """Print the received signal to the terminal."""
@@ -68,8 +77,7 @@ class PrintSignalOp(Operator):
 
     def compute(self, op_input, op_output, context):
         signal = op_input.receive("signal")
-        cupy_signal = signal['out_tensor']
-        #cp_array = signal.asarray()
+        #numpy_signal = signal['out_tensor']
         print("Received")
 
 class BYOMApp(Application):
@@ -86,50 +94,40 @@ class BYOMApp(Application):
         # set name
         self.name = "BYOM App"
 
-        if data == "none":
-            data = os.environ.get("HOLOSCAN_INPUT_PATH", "../data")
 
-        self.sample_data_path = data
 
-        self.model_path = os.path.join(os.path.dirname(__file__), "../model")
         self.model_path_map = {
-            "byom_model": os.path.join(self.model_path, "identity_model.onnx"),
+            "raft_model": os.path.join('./model/raft_pointtrackSTIR.onnx'),
         }
 
-        self.video_dir = os.path.join(self.sample_data_path, "racerx")
-        if not os.path.exists(self.video_dir):
-            raise ValueError(f"Could not find video data: {self.video_dir=}")
 
     def compose(self):
         host_allocator = UnboundedAllocator(self, name="host_allocator")
 
-        source = VideoStreamReplayerOp(
-            self, name="replayer", directory=self.video_dir, **self.kwargs("replayer")
-        )
 
-        preprocessor = FormatConverterOp(
-            self, name="preprocessor", pool=host_allocator, **self.kwargs("preprocessor")
-        )
 
         inference = InferenceOp(
             self,
             name="inference",
             allocator=host_allocator,
+            transmit_on_cuda = False,
+            infer_on_cpu = True,
+            output_on_cuda=False,
+            input_on_cuda=False,
             model_path_map=self.model_path_map,
             **self.kwargs("inference"),
         )
+        breakpoint()
 
-        postprocessor = SegmentationPostprocessorOp(
-            self, name="postprocessor", allocator=host_allocator, **self.kwargs("postprocessor")
-        )
 
 
         sinkop = PrintSignalOp(self, name="Sink")
         genop = DataGenOp(self, name="Generator")
         # Define the workflow
         self.add_flow(genop, inference, {("", "receivers")})
-        self.add_flow(inference, postprocessor, {("transmitter", "in_tensor")})
-        self.add_flow(postprocessor, sinkop, {("out_tensor", "signal")})
+        self.add_flow(inference, sinkop, {("transmitter", "signal")})
+        breakpoint()
+        #self.add_flow(postprocessor, sinkop, {("out_tensor", "signal")})
 #        idop = IdentityOp(self, name="Passthrough")
 #        # Define the workflow
 #        self.add_flow(source, preprocessor, {("output", "source_video")})
