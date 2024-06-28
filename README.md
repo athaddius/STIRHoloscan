@@ -1,51 +1,26 @@
-# Bring Your Own Model
+# PointTracker Holoscan Bring Your Own Model
 
-This example shows how to run inference with Holoscan and provides a mechanism, to replace the existing identity model with another model.
 
-*Visit the [SDK User Guide](https://docs.nvidia.com/holoscan/sdk-user-guide/examples/byom.html) for step-by-step documentation of this example.*
+**For participants in the efficiency component of the STIR Challenge**
 
-## Data
+This example shows how to run inference on the NVIDIA Holoscan platform using a simple point tracking model. We provide a RAFT model that can be exported to onnx using the code in [RAFT_STIR](https://github.com/athaddius/RAFT_STIR).
 
-The following datasets are used by this example:
-- [📦️ (NGC) Sample RacerX Video Data](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/clara-holoscan/resources/holoscan_racerx_video/files?version=20231009).
-- [(Git) Identity ONNX model](model/identity_model.onnx)
+For the challenge, models should be exported to onnx or tensorrt, and follow the same API as in the `python/pointtracker_holoscan.py`. In essence, to prepare your model to be benchmarked, set it up to ingress a pointlist of dimension (1, 32, 2) and two images of dimension (1, 3, 512, 640). We expect the entire model to be exported into an onnx or tensorrt file, as the scaffolding code will not be editable by challenge participants.
 
-## Run instructions
+**Note: The pointcount will be fixed to 32 points for the efficiency component only.** For the accuracy component of the challenge, allow a flexible amount of points for inference. 
+If you have a **fixed-size base model**, this can be done via masking unused inputs (of the 32) in your model for the accuracy evaluation [STIRMetrics](https://github.com/athaddius/STIRMetrics). If your model is **dynamically sized** (like our implemenation in RAFT_STIR), then complete STIRMetrics as-is, and export a fixed size onnx (or tensorrt) model for this efficiency component.
 
-The following instructions shows how to run the byom example.  If you run this example as is, it
-will look similar to the `video_replayer` example.  To get the most from this example, the instructions
-in this [section](https://docs.nvidia.com/holoscan/sdk-user-guide/examples/byom.html) will walk you
-through how to modify the python example code to run the application with an ultrasound segmentation model.
-
-* **using python wheel**:
-  ```bash
-  # [Prerequisite] Download NGC dataset above to `DATA_DIR`
-  export HOLOSCAN_INPUT_PATH=<DATA_DIR>
-  # [Prerequisite] Download `model` and `python` folders below to `APP_DIR`
-  # [Optional] Start the virtualenv where holoscan is installed
-  python3 <APP_DIR>/python/byom.py
+To test out the example RAFT model, follow the instructions under holoscan for installation instructions of the NVIDIA Holoscan platform.
   ```
-* **using deb package install**:
-  ```bash
-  /opt/nvidia/holoscan/examples/download_example_data
-  export HOLOSCAN_INPUT_PATH=<DATA_DIR>
-  export PYTHONPATH=/opt/nvidia/holoscan/python/lib
-  # Need to enable write permission in the model directory to write the engine file (use with caution)
-  sudo chmod a+w /opt/nvidia/holoscan/examples/bring_your_own_model/model
-  python3 /opt/nvidia/holoscan/examples/bring_your_own_model/python/byom.py
+  ./rundocker.sh
+  cd <CODEDIR_DST> # change directory to where you set your code to be (this folder + your model file).
+  python python/pointtracker_holoscan.py
   ```
-* **from NGC container**:
-  ```bash
-  python3 /opt/nvidia/holoscan/examples/bring_your_own_model/python/byom.py
-  ```
-* **source (dev container)**:
-  ```bash
-  ./run launch # optional: append `install` for install tree
-  python3 ./examples/bring_your_own_model/python/byom.py
-  ```
-* **source (local env)**:
-  ```bash
-  export PYTHONPATH=${BUILD_OR_INSTALL_DIR}/python/lib
-  export HOLOSCAN_INPUT_PATH=${SRC_DIR}/data
-  python3 ${BUILD_OR_INSTALL_DIR}/examples/bring_your_own_model/python/byom.py
-  ```
+If this all runs (outputs a string of "Generated 1,2,..."), then you are in a good place! Now make your onnx/tensorrt code do the same :)
+
+
+
+# Holoscan
+
+*Visit the [SDK User Guide](https://docs.nvidia.com/holoscan/sdk-user-guide/examples/byom.html) for step-by-step documentation of the bring-your-own-model example.*
+
