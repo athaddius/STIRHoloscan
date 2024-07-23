@@ -26,8 +26,7 @@ from holoscan.operators import (
     VideoStreamReplayerOp,
 )
 from holoscan.resources import UnboundedAllocator
-from holoscan.core import Tracker
-from holoscan.core import DataFlowMetric
+from holoscan.core import Tracker, DataFlowMetric
 import cupy as cp
 import numpy as np
 
@@ -127,7 +126,6 @@ def main(config_file, data):
     app.config(config_file)
     with Tracker(app, filename="timestamps.log") as tracker:
         app.run()
-
 
 
 if __name__ == "__main__":
