@@ -13,14 +13,28 @@ If you have a **fixed-size base model**, this can be done via masking unused inp
 To test out the example RAFT model, follow the instructions under holoscan for installation instructions of the NVIDIA Holoscan platform.
   ```
   ./rundocker.sh
-  cd <CODEDIR_DST> # change directory to where you set your code to be (this folder + your model file).
-  python python/pointtracker_holoscan.py
+  # inside docker container
+  cd /workspace/stir # change directory to where you set your code to be (this folder + your model file).
+  python python/pointtracker_holoscan.py # run for 20+ frames at least
   ```
 If this all runs (outputs a string of "Generated 1,2,..."), then you are in a good place! Now make your onnx/tensorrt code do the same :)
 
 
+## Get Metrics
 
-# Holoscan
+The above command will already generate the timestamp logs for the challnege. To get the metrics, you need to clone the holohub repository which includes all the tools to retrieve metrics 
+information.
+
+```
+git clone https://github.com/nvidia-holoscan/holohub
+pip install -r holohub/benchmarks/holoscan_flow_benchmarking/requirements.txt
+python holohub/benchmarks/holoscan_flow_benchmarking/analyze.py -m -p 99 99.9 -a -g timestamps.log
+```
+
+It will output the maximum, 99.9 percentile, 99 percentile and average end-to-end latency. We will
+use a combination of these numbers to evaluate on the efficiency metric.
+
+## Holoscan
 
 *Visit the [SDK User Guide](https://docs.nvidia.com/holoscan/sdk-user-guide/examples/byom.html) for step-by-step documentation of the bring-your-own-model example.*
 

@@ -26,6 +26,8 @@ from holoscan.operators import (
     VideoStreamReplayerOp,
 )
 from holoscan.resources import UnboundedAllocator
+from holoscan.core import Tracker
+from holoscan.core import DataFlowMetric
 import cupy as cp
 import numpy as np
 
@@ -123,7 +125,9 @@ def main(config_file, data):
     app = PointTrackerApp(data=data)
     # if the --config command line argument was provided, it will override this config_file
     app.config(config_file)
-    app.run()
+    with Tracker(app, filename="timestamps.log") as tracker:
+        app.run()
+
 
 
 if __name__ == "__main__":
