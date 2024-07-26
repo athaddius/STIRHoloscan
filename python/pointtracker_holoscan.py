@@ -30,10 +30,36 @@ from holoscan.core import Tracker, DataFlowMetric
 import cupy as cp
 import numpy as np
 
+from STIRLoader import STIRLoader
+import torch
+import numpy as np
+from tqdm import tqdm
+
+device = "cuda"
+
+def todevice(cpudict):
+    outdict = {}
+    for k, v in cpudict.items():
+        if k != "ims_ori":
+            outdict[k] = [x.to(device) for x in v]
+        else:
+            outdict[k] = v
+    return outdict
+
+# Loading a single dataset for demonstration
+datasets = STIRLoader.getclips(datadir="./STIRDataset")
+dataset = datasets[0]
+
 class DataGenOp(Operator):
     """Generate dummy data for point tracking"""
     def __init__(self, fragment, *args, **kwargs):
         self.count = 1
+        self.pointlist_start = np.array(dataset.dataset.getstartcenters())
+        self.image1 = None
+        dataloader = torch.utils.data.DataLoader(
+                        dataset, batch_size=1, num_workers=0, pin_memory=True
+                    )
+        self.dataloaderiter = iter(dataloader)
 
         super().__init__(fragment, *args, **kwargs)
 
@@ -43,12 +69,15 @@ class DataGenOp(Operator):
     def compute(self, op_input, op_output, context):
         self.count+=1
         out_dict = dict()
-        out_dict["pointlist"] = cp.random.random((1, 32, 2), np.float32) * 32.0
-        out_dict["image1"] = cp.random.random((1, 3, 512, 640), np.float32)
-        out_dict["image2"] = cp.random.random((1, 3, 512, 640), np.float32)
-        # for k, v in out_dict.items():
-        #     # out_dict[k] = v.asnumpy()
-        print(f"Generated {self.count}")
+        if self.image1 is None:
+            self.image1 = todevice(next(self.dataloaderiter))
+        self.image2 = todevice(next(self.dataloaderiter))
+        #print the types of structures for image1, image2 and pointlist_start
+        out_dict["pointlist"] = cp.array(self.pointlist_start, np.float32)
+        out_dict["image1"] = cp.array(self.image1['ims_ori'][0], np.float32)
+        out_dict["image2"] = cp.array(self.image2['ims_ori'][0], np.float32)
+        self.image1 = self.image2
+        # print(f"Generated {self.count}")
         op_output.emit(out_dict, "out_dict")
 
 class IdentityOp(Operator):
@@ -67,7 +96,7 @@ class IdentityOp(Operator):
             # breakpoint()
             cp_array = cp.asarray(v)
             out_msg[k] = cp_array
-        print("Received")
+        # print("Received")
         signal = op_output.emit(out_msg, "output_tensor")
 
 class PrintSignalOp(Operator):
@@ -82,17 +111,17 @@ class PrintSignalOp(Operator):
         print("Received")
 
 class PointTrackerApp(Application):
-    def __init__(self, data):
-        """Initialize the application
-
-        Parameters
-        ----------
-        data : Location to the data
-        """
+    def __init__(self):
+        """Initialize the application"""
 
         super().__init__()
 
         self.name = "Point Tracker App"
+
+        # check if model_path exists
+        model_path = './model/raft_pointtrackSTIR.onnx'
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"Model file {model_path} not found")
 
         self.model_path_map = {
             "raft_model": os.path.join('./model/raft_pointtrackSTIR.onnx'),
@@ -121,7 +150,7 @@ class PointTrackerApp(Application):
 
 
 def main(config_file, data):
-    app = PointTrackerApp(data=data)
+    app = PointTrackerApp()
     # if the --config command line argument was provided, it will override this config_file
     app.config(config_file)
     with Tracker(app, filename="timestamps.log") as tracker:
@@ -137,6 +166,10 @@ if __name__ == "__main__":
         default="none",
         help=("Set the data path"),
     )
+
+    # check if "./STIRDataset" directory exists
+    if not os.path.exists("./STIRDataset"):
+        raise FileNotFoundError(f"Data directory './STIRDataset' not found")
 
     args = parser.parse_args()
     config_file = os.path.join(os.path.dirname(__file__), "pointtracker.yaml")
