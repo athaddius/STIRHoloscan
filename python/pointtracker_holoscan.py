@@ -47,7 +47,7 @@ def todevice(cpudict):
     return outdict
 
 # Loading a single dataset for demonstration
-datasets = STIRLoader.getclips(datadir="./STIRDataset")
+datasets = STIRLoader.getclips(datadir="/workspace/data")
 dataset = datasets[0]
 
 class DataGenOp(Operator):
@@ -60,6 +60,10 @@ class DataGenOp(Operator):
                         dataset, batch_size=1, num_workers=0, pin_memory=True
                     )
         self.dataloaderiter = iter(dataloader)
+        self.out_dict = dict()
+        self.out_dict["pointlist"] = cp.zeros((1,32,2), np.float32)
+        self.out_dict["image1"] = cp.zeros((1,3,512, 640), np.float32)
+        self.out_dict["image2"] = cp.zeros((1,3,512,640), np.float32)
 
         super().__init__(fragment, *args, **kwargs)
 
@@ -68,17 +72,19 @@ class DataGenOp(Operator):
 
     def compute(self, op_input, op_output, context):
         self.count+=1
-        out_dict = dict()
-        if self.image1 is None:
-            self.image1 = todevice(next(self.dataloaderiter))
-        self.image2 = todevice(next(self.dataloaderiter))
+        #if self.image1 is None:
+            #self.image1 = todevice(next(self.dataloaderiter))
+        #self.image2 = todevice(next(self.dataloaderiter))
         #print the types of structures for image1, image2 and pointlist_start
-        out_dict["pointlist"] = cp.array(self.pointlist_start, np.float32)
-        out_dict["image1"] = cp.array(self.image1['ims_ori'][0], np.float32)
-        out_dict["image2"] = cp.array(self.image2['ims_ori'][0], np.float32)
-        self.image1 = self.image2
+        #out_dict["pointlist"] = cp.array(self.pointlist_start, np.float32)
+        #out_dict["image1"] = cp.array(self.image1['ims_ori'][0], np.float32)
+        #out_dict["image2"] = cp.array(self.image2['ims_ori'][0], np.float32)
+        #out_dict["pointlist"] = cp.random.random((1,32,2), np.float32)
+        #out_dict["image1"] = cp.random.random((1,3,512, 640), np.float32)
+        #out_dict["image2"] = cp.random.random((1,3,512,640), np.float32)
+        #self.image1 = self.image2
         # print(f"Generated {self.count}")
-        op_output.emit(out_dict, "out_dict")
+        op_output.emit(self.out_dict, "out_dict")
 
 class IdentityOp(Operator):
     """Print the received signal to the terminal."""
@@ -108,7 +114,6 @@ class PrintSignalOp(Operator):
     def compute(self, op_input, op_output, context):
         signal = op_input.receive("signal")
         #numpy_signal = signal['out_tensor']
-        print("Received")
 
 class PointTrackerApp(Application):
     def __init__(self):
@@ -168,8 +173,8 @@ if __name__ == "__main__":
     )
 
     # check if "./STIRDataset" directory exists
-    if not os.path.exists("./STIRDataset"):
-        raise FileNotFoundError(f"Data directory './STIRDataset' not found")
+    if not os.path.exists("/workspace/data"):
+        raise FileNotFoundError(f"Data directory '/workspace/data' not found")
 
     args = parser.parse_args()
     config_file = os.path.join(os.path.dirname(__file__), "pointtracker.yaml")

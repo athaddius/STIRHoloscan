@@ -48,7 +48,7 @@ $ ./holohub/dev_container build\
 
 To test out the example RAFT model, follow the instructions below:
 ```
-$  ./rundocker.sh
+$  ./rundocker.sh <datasetlocation> <holohublocation>
 # inside docker container
 $ python python/pointtracker_holoscan.py # run for more than 20 frames
 ```
@@ -61,7 +61,7 @@ The above command will already generate the timestamp logs for the challnege (`t
 The following command (inside the docker container) will produce metrics like 99.9, 99, 95
 percentile latencies and average latency.
 ```
-python holohub/benchmarks/holoscan_flow_benchmarking/analyze.py -m -p 99.9 99 95 -a -g timestamps.log
+python /workspace/holohub/benchmarks/holoscan_flow_benchmarking/analyze.py -m -p 99.9 99 95 -a -g timestamps.log
 ```
 
 It will output the maximum, 99.9 percentile, 99 percentile, 95 percentile and average end-to-end

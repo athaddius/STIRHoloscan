@@ -39,10 +39,13 @@ RUN apt update \
 
 COPY benchmarks/holoscan_flow_benchmarking/requirements.txt /tmp/benchmarking_requirements.txt
 RUN pip install -r /tmp/benchmarking_requirements.txt
+RUN pip install scipy opencv-python opencv-contrib-python tqdm
+RUN cd /tmp/ && git clone https://github.com/athaddius/MFT_STIR.git \
+    && cd MFT_STIR && pip install .
 
 # For STIRLoader
 RUN mkdir -p /tmp \
     && cd /tmp/ && git clone https://github.com/athaddius/STIRLoader.git \
     && cd STIRLoader && pip install .
-RUN pip install torchvision
+RUN pip install torchvision onnxruntime-gpu
 RUN apt-get update && apt-get install --no-install-recommends -y ffmpeg libsm6 libxext6
