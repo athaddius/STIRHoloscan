@@ -16,7 +16,6 @@
 ---
 
 inference:  # Inference
-  backend: "onnxrt"
   pre_processor_map: 
     "raft_model": ["pointlist", "image1", "image2"]
   inference_map: 
