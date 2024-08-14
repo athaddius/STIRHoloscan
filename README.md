@@ -63,10 +63,10 @@ Insert your model, and modify the code to make it run as efficient as possible w
 ### Get Efficiency Metrics
 
 The above command will already generate the timestamp logs for the challnege (`timestamps.log`). 
-The following command (inside the docker container) will produce metrics like 99.9, 99, 95
+The following command (inside the docker container) will produce metrics like 99.9, 99
 percentile latencies and average latency.
 ```
-python /workspace/holohub/benchmarks/holoscan_flow_benchmarking/analyze.py -m -p 99.9 99 95 -a -g timestamps.log
+python /workspace/holohub/benchmarks/holoscan_flow_benchmarking/analyze.py -m -p 99.9 99 -a -g timestamps.log
 ```
 
 It will output the maximum, 99.9 percentile, 99 percentile, 95 percentile and average end-to-end

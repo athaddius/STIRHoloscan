@@ -62,10 +62,10 @@ class DataGenOp(Operator):
         self.pointlist_start = np.array(dataset.dataset.getstartcenters())
         cur_num_points = self.pointlist_start.shape[1]
         self.image1 = None
-        dataloader = torch.utils.data.DataLoader(
+        self.dataloader = torch.utils.data.DataLoader(
                         dataset, batch_size=1, num_workers=0, pin_memory=True
                     )
-        self.dataloaderiter = iter(dataloader)
+        self.dataloaderiter = iter(self.dataloader)
 
         super().__init__(fragment, *args, **kwargs)
 
@@ -87,6 +87,8 @@ class DataGenOp(Operator):
         except StopIteration:
             print("done")
             exit()
+            #self.dataloaderiter = iter(self.dataloader)
+            #self.image1 = DataGenOp.resize(next(self.dataloaderiter))
         #print the types of structures for image1, image2 and pointlist_start
         out_dict = {}
         if self.count == 0:
