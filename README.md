@@ -12,7 +12,7 @@ If you have a **fixed-size base model**, this can be done via masking unused inp
 
 ## Steps
 
-## Read Challenge Rules and Sign Up
+### Read Challenge Rules and Sign Up
 Challenge details and rules are on our [Synapse Page](https://www.synapse.org/Synapse:syn54126082/wiki/626617).
 
 ### Download the dataset
@@ -58,7 +58,8 @@ $ cd models && ./genengine.sh  # generate a trt engine file from the onnx file
 $ python python/pointtracker_holoscan.py # run for more than 20 frames
 ```
 If this all runs (outputs point locations over time), then you are in a good place! Now make your onnx/tensorrt code do the same :)
-Insert your model, and modify the code to make it run as efficient as possible while still creating correct predictions.
+Insert your model, and modify any of the code to make it run as efficient as possible while still creating correct predictions.
+
 
 
 ### Get Efficiency Metrics
@@ -72,6 +73,9 @@ python /workspace/holohub/benchmarks/holoscan_flow_benchmarking/analyze.py -m -p
 
 It will output the maximum, 99.9 percentile, 99 percentile, 95 percentile and average end-to-end
 latency. We will use a combination of these numbers to evaluate on the efficiency metric.
+
+### Submission
+For the evaluation, we expect participants to submit docker images that can be run in the same manner as `rundocker.sh` above. Use this codebase to begin, and set up your Dockerfile to import your model. Include the engine and anything that is needed for your model in this docker image. We will be running it with `./rundocker.sh`, verifying the model and then analyzing the `timestamps.log` file that it outputs.
 
 ## Holoscan
 
