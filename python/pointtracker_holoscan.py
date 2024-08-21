@@ -82,7 +82,7 @@ class DataGenOp(Operator):
         return im.unsqueeze(0)
 
     def compute(self, op_input, op_output, context):
-        load_data = True
+        load_data = False
         out_dict = {}
         if load_data:
             try:
