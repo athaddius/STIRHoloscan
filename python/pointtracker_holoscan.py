@@ -19,6 +19,7 @@ import os
 from argparse import ArgumentParser
 
 from holoscan.core import Application, Operator, OperatorSpec
+from holoscan.conditions import CountCondition
 from holoscan.operators import (
     FormatConverterOp,
     InferenceOp,
@@ -98,7 +99,7 @@ class DataGenOp(Operator):
             self.image1 = self.image2
             if self.count == 0:
                 out_dict["pointlist"] = cp.array(self.pointlist_start/2.0, np.float32) # dividing by 2 since we downscale ims
-                print(out_dict["pointlist"])
+                #print(out_dict["pointlist"])
             else:
                 out_dict["pointlist"] = pointlocs_last / 2.0
         else:
@@ -159,7 +160,7 @@ class PointTrackerApp(Application):
         )
 
         sinkop = PrintSignalOp(self, name="Sink")
-        genop = DataGenOp(self, name="Generator")
+        genop = DataGenOp(self, CountCondition(self, 2000), name="Generator") # run for 2000 iters
         # Define the workflow
         self.add_flow(genop, inference, {("", "receivers")})
         self.add_flow(inference, sinkop, {("transmitter", "signal")})
@@ -169,7 +170,7 @@ def main(config_file, data):
     app = PointTrackerApp()
     # if the --config command line argument was provided, it will override this config_file
     app.config(config_file)
-    with Tracker(app, filename="timestamps.log") as tracker:
+    with Tracker(app, filename="/workspace/output/timestamps.log") as tracker:
         app.run()
 
 
