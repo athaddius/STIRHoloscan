@@ -160,7 +160,7 @@ class PointTrackerApp(Application):
         )
 
         sinkop = PrintSignalOp(self, name="Sink")
-        genop = DataGenOp(self, CountCondition(self, 500), name="Generator") # run for 500 iters
+        genop = DataGenOp(self, CountCondition(self, 2000), name="Generator") # run for 2000 iters
         # Define the workflow
         self.add_flow(genop, inference, {("", "receivers")})
         self.add_flow(inference, sinkop, {("transmitter", "signal")})
