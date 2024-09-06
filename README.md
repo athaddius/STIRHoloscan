@@ -52,9 +52,9 @@ $ ./holohub/dev_container build\
 To test out the example RAFT model, follow the instructions below:
 First make an output directory to store the timestamps in any directory of your choosing. Then:
 ```
-$  ./rundocker.sh <datasetlocation> <holohublocation> <output directory>
+$ ./rundocker.sh <datasetlocation> <holohublocation> <output directory>
 # inside docker container
-$ cd models && ./genengine.sh  # generate a trt engine file from the onnx file
+$ ./genengine.sh  # generate a trt engine file from the onnx file
 $ python python/pointtracker_holoscan.py # run for more than 20 frames
 ```
 If this all runs (outputs point locations over time), then you are in a good place! Now make your onnx/tensorrt code do the same :)
@@ -65,14 +65,15 @@ Insert your model, and modify any of the code to make it run as efficient as pos
 ### Get Efficiency Metrics
 
 The above command will already generate the timestamp logs for the challnege (`timestamps.log`). 
+
 The following command (inside the docker container) will produce metrics like 99, 95
-percentile latencies and average latency.
+percentile, min, max, median and average latencies.
+
 ```
-python /workspace/holohub/benchmarks/holoscan_flow_benchmarking/analyze.py -m -p 99 95 -a -g /workspace/output/timestamps.log
+python analyze.py -l /workspace/output/timestamps.log 
 ```
 
-It will output the maximum, 99.9 percentile, 99 percentile, 95 percentile and average end-to-end
-latency. We will use a combination of these numbers to evaluate on the efficiency metric.
+ We will use a combination of these numbers to evaluate on the efficiency metric.
 
 ### Submission
 For the evaluation, we expect participants to submit docker images that can be run in the same manner as `rundocker.sh` above. Use this codebase to begin, and set up your Dockerfile to import your model. Include the engine and anything that is needed for your model in this docker image. We will be running it with `./rundocker.sh`, verifying the model and then analyzing the `timestamps.log` file that it outputs.

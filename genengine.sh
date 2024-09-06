@@ -1,1 +1,2 @@
-trtexec --verbose --onnx=raft_pointtrackSTIR.onnx --saveEngine=raft_pointtrack.engine
+#!/bin/sh
+trtexec --verbose --onnx=model/raft_pointtrackSTIR.onnx --saveEngine=model/raft_pointtrack.engine
