@@ -1,6 +1,6 @@
 # STIR Holoscan PointTracker Benchmarking
 
-**For participants in the efficiency component of the STIR Challenge**
+**For participants in the efficiency component of the 2024 STIR Challenge**
 
 This example shows how to run inference on the NVIDIA Holoscan platform using a simple point tracking model. We provide a RAFT model that can be exported to onnx using the code in [RAFT_STIR](https://github.com/athaddius/RAFT_STIR).
 
@@ -13,7 +13,7 @@ If you have a **fixed-size base model**, this can be done via masking unused inp
 ## Steps
 
 ### Read Challenge Rules, Sign Up, and Submission Instructions
-Challenge details for submission are on our [Synapse Page](https://www.synapse.org/Synapse:syn54126082/wiki/626617).
+Challenge details for submission are on our [2024 STIR Challenge Synapse Page](https://www.synapse.org/Synapse:syn54126082/wiki/626617).
 
 ### Download the dataset
 
